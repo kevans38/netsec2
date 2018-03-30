@@ -36,7 +36,3 @@ def GetFileInfo(file_name, split_val, split_val2):
         all_data_array.append(split_array)
 
     return all_data_array
-
-test = GetFileInfo("rounds.csv", "'", (", ", " ", "\n", "]"))
-
-aprint(test)
