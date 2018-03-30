@@ -1,7 +1,6 @@
 import read_file_part_1
 
-#This will run an extended statistical dislosure attack and return a list
-# of most likely friends
+#This will run an extended statistical dislosure attack and write a list of most likely friends to a csv file
 def esd_attack (target, messages, batch_size, csv):
 	
 	obs_dist = {}
