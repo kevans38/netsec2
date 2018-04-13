@@ -17,9 +17,6 @@ targets = read_target_file("part2targets.txt")
 x = 0	
 for target in targets:
 
-	if x == 0:
-		x += 1
-		continue	
 	try:
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		print("Socket created")
@@ -27,9 +24,48 @@ for target in targets:
 		print ("Error %s" %(err))
 
 	s.connect((target[1], int(target[2])))
-	s.send("PEERS\n")
-	received = s.recv(1024)
-	print(received)
-	received2 = s.recv(1024)
-	print(received2)
+	these_peers = []
+	while True:
+		s.send("PEERS\n")
+		received = s.recv(1024)
+		received2 = s.recv(1024)
+		split_rec = re.split('[\n]', received2)
+		split_rec = split_rec[:-1]
+		split_rec.append(received[:-1])
+		print(split_rec)
+		no_new = True
+		for element in split_rec:
+			found_peer = False
+			for peer in these_peers:
+				if element == peer:
+					found_peer = True
+					break
+			if not found_peer:
+				these_peers.append(element)
+				no_new = False
+				print(len(these_peers))
+		if no_new == True:
+			break
+							
+
+	for peer in these_peers:
+		split_peer = re.split('[@ :]', peer)
+		found_peer = False
+		for target2 in targets:
+			if split_peer[0] == target2[0]:
+				found_peer = True
+				break
+		if not found_peer:
+			targets.append(split_peer)
+	print("*********************************")
+	print(len(targets))
+	for ele in targets:
+		print(ele)
+	print("***********************************")
+
+
 	s.close()
+
+with open ("trash.txt") as trash:
+	for target in targets:
+		trash.write(target[0] + "@" + target[1] +":" + target[2])
