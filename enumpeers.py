@@ -22,8 +22,10 @@ for target in targets:
 		print("Socket created")
 	except socket.error as err:
 		print ("Error %s" %(err))
-
+		targets.remove(target)
+		continue
 	s.connect((target[1], int(target[2])))
+
 	these_peers = []
 	while True:
 		s.send("PEERS\n")
@@ -32,19 +34,26 @@ for target in targets:
 		split_rec = re.split('[\n]', received2)
 		split_rec = split_rec[:-1]
 		split_rec.append(received[:-1])
+		print("hm")
+
+		if '@' not in split_rec[0]:
+			continue
 		print(split_rec)
 		no_new = True
+		threshold = 0
 		for element in split_rec:
 			found_peer = False
 			for peer in these_peers:
 				if element == peer:
 					found_peer = True
+					threshold = 0
 					break
 			if not found_peer:
 				these_peers.append(element)
 				no_new = False
+				threshold += 1
 				print(len(these_peers))
-		if no_new == True:
+		if no_new == True and threshold > 4:
 			break
 							
 
