@@ -81,6 +81,6 @@ for target in targets:
 	if len(targets) == 240:
 		break
 
-with open ("trash.txt") as trash:
+with open ("trash.txt", "w") as trash:
 	for target in targets:
 		trash.write(target[0] + "@" + target[1] +":" + target[2])
