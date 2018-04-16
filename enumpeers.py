@@ -26,6 +26,7 @@ for target in targets:
 	try:
 		s.connect((target[1], int(target[2])))
 	except socket.error as err:
+		target.remove(target)
 		print ("Error %s" % (err))
 		continue
 
@@ -83,4 +84,4 @@ for target in targets:
 
 with open ("trash.txt", "w") as trash:
 	for target in targets:
-		trash.write(target[0] + "@" + target[1] +":" + target[2])
+		trash.write(target[0] + "@" + target[1] +":" + target[2] + '\n')
