@@ -26,7 +26,6 @@ for target in targets:
 	try:
 		s.connect((target[1], int(target[2])))
 	except socket.error as err:
-		target.remove(target)
 		print ("Error %s" % (err))
 		continue
 
