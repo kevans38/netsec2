@@ -14,10 +14,9 @@ def read_target_file(filename):
     return target_ids
 
 
-targets = read_target_file("part2targets.txt")
+targets = read_target_file("publicpeers.txt")
 
-x = 0
-priv_file_name = "finding_connections.dat"
+priv_file_name = "priv_transcript.txt"
 
 open(priv_file_name, 'w').close()
 
@@ -38,7 +37,7 @@ for target in targets:
 
     these_peers = []
     threshold = 0
-
+    no_at_sign = False
     while True:
         s.send("PEERS\n".encode())
         received = s.recv(1024).decode()
@@ -46,13 +45,17 @@ for target in targets:
         split_rec = re.split('[\n]', received2)
         split_rec = split_rec[:-1]
         split_rec.append(received[:-1])
-
-        if '@' not in split_rec[0]:
+        print(split_rec)
+        for ele in split_rec:
+            if '@' not in ele:
+                no_at_sign = True
+                break
+        if no_at_sign:
+            no_at_sign = False
             continue
 
         no_new = True
         for element in split_rec:
-            print(threshold)
             found_peer = False
             for peer in these_peers:
                 if element == peer:
@@ -62,9 +65,9 @@ for target in targets:
                 these_peers.append(element)
                 no_new = False
                 threshold = 0
-            print(no_new, threshold)
+        print(no_new, threshold)
         threshold += 1
-        if no_new == True and threshold > 10:
+        if no_new == True and threshold > 15:
             break
 
     for peer in these_peers:
@@ -75,28 +78,28 @@ for target in targets:
                 found_peer = True
                 break
         if not found_peer:
-            targets.append(split_peer)
+            #targets.append(split_peer)
+            print("sure")
 
 
     #TODO
-    user_id = split_rec[0]
+    user_id = target[0] + "@" + target[1] + ":" + target[2]
+    print(user_id)
     if user_id not in public_dict:
         public_dict[user_id] = []
 
     for ele in these_peers:
         if ele not in public_dict[user_id]:
             public_dict[user_id].append(ele)
+    print(public_dict)
 
     print(split_rec)
     for ele in these_peers:
         print(ele)
-
     s.close()
 
-    if len(targets) == 240:
-        break
 
-with open("priv_transcript.txt", "w") as trash:
+with open(priv_file_name, "w") as trash:
     for node, connections in public_dict.items():
         trash.write("! " + str(node) + "\n")
         for eles in connections:
