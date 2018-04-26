@@ -81,7 +81,11 @@ started_new_round = 0
 priv_msg_dict = {}
 curr_time = 0
 prev_epoch = 0.0
-ftime = 0
+curr_msg_time = 0
+curr_time_add_ten = 0
+first = 0
+round_start_time = 0
+round_ct = 0
 
 for row in data_file_in:
     dif = 0     # difference in time
@@ -92,10 +96,13 @@ for row in data_file_in:
         user_id = row_split[0]
         round_number = int(row_split[2])
 
-        first = 0
-
         # starting new round
         if round_number != new_round:
+            print("-=======================NEW ROUND")
+            exit()      #FOR TESTING
+
+            round_ct += 1
+
             started_new_round += 1
             WriteToCSVFile("S", round_offer_dict, csv_file_name)
             WriteToCSVFile("R", round_ack_dict, csv_file_name)
@@ -106,6 +113,7 @@ for row in data_file_in:
             # NEW additions
             prev_time = 0
             prev_epoch = 0.0
+            first = 0
 
             priv_msg_dict = {}  # collect new private messages each round..
 
@@ -119,20 +127,12 @@ for row in data_file_in:
         miliseconds = float(row_split[1][-8:-1])
         full_epoch_time = epoch_time + miliseconds
 
-        ftime = float(full_epoch_time)  # converted to float for better calculations
+        curr_msg_time = float(full_epoch_time)  # converted to float for better calculations
 
+        # if it is the first of the round, keep track of to determine private nodes.
+        if first == 0:
+            round_start_time = curr_msg_time
 
-        #print("current epoch", type(ftime))
-        #print("prev epoch ", type(prev_epoch))
-        # DOESN't WORK here because want to compare the same msg time!!!
-        '''
-        if prev_epoch != 0:
-            dif = ftime - prev_epoch)
-            print("DIF", dif)
-
-        if dif != 0:
-            print("WHAT, YAY!!!!")
-        '''
 
         msg_id = row_split[2]
         if msg_id == "OFFER":
@@ -148,28 +148,37 @@ for row in data_file_in:
                 # if messsage from a private node, check time and put in dict
                 if row_split[2][0] != "f":
                     msg_id_type = -1
-                    #print("++++++++++++++++user_id", user_id)
-                    #print("row_split[2][0]: ", row_split[2])
-
                     msg = row_split[2]
 
-                    temp = [user_id, ftime]
-
-                    # only put user in priv_msg_dict  if really close time?
+                    temp = [user_id, curr_msg_time]
+                    # if not in the dictionary, only add to list of 8 if...???
                     if msg not in priv_msg_dict:
-                        priv_msg_dict[msg] = []
+                        time_dif = abs(curr_msg_time - round_start_time)
+                        print("time diff ", time_dif)
+                        if time_dif < 5:
+                            priv_msg_dict[msg] = []
+                            priv_msg_dict[msg].append(temp)
+                    else: # only put user in priv_msg_dict if fit in the right time
+                        if msg in priv_msg_dict:
+                            print("Inside the Dict[msg]",priv_msg_dict[msg])
+                            for k,v in priv_msg_dict.items():
+                                dict_user_time = v[0][1]            #This should be the lowest time
+                                time_dif = abs(curr_msg_time - dict_user_time)
+                                # time_dif should only be 10
 
-                    priv_msg_dict[msg].append(temp)
-
+                                if time_dif < 5:
+                                    #print("here")
+                                    priv_msg_dict[msg].append(temp)
+                                    break
+                    first += 1
             msg_id_type = -1
 
-    if started_new_round == 3:
-        print("in")
-        for k,v in priv_msg_dict.items():
-            print("message: ", k)
-            print("node recvd message, time: ", v)
-        #exit()
-    prev_epoch = ftime
-    first += 1
+    for k,v in priv_msg_dict.items():
+        print("message: ", k)
+        #print("node recvd message, time: ", v[0][1])    # this give the time of the 0th user
+        print("node recev", v )
+
+    prev_epoch = curr_msg_time
+
 
 data_file_in.close()
