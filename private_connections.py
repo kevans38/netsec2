@@ -2,41 +2,21 @@ import time
 import re
 import datetime
 
+
 OFFER = 0
 ACK = 1
 #1 second time threshold
 TIME_THRESH = 1
 
-#msg_id is whether it is a OFFER or ACK
 
-
-def WriteToCSVFile(send_or_recieve, dictionary, file_name):
-    file = open(file_name, "a+")
-
-    dict_length = len(dictionary)
-
-    iteration = 0
-
-    file_string = send_or_recieve + ":["
-    for row in dictionary.values():
-        iteration += 1
-        user_id = row[1]
-        check_for_public_nodes = row[2]
-
-        #this means it is a public node
-        if check_for_public_nodes == 1:
-            #print("Public user: ", user_id)
-            file_string += "'" + user_id
-
-            file_string += "', "
-        else: # IT IS A PRIVATE NODE
-            #print("Private user: ", user_id)
-            continue
-    #TODO: Might cause problems? The ] in the csv file is in a different box
-    file_string = file_string[:-2]
-    file_string += "]\n"
-    file.write(file_string)
-    file.close()
+def write_to_file(round_num, dictionary, file_name):
+    with open(file_name, "a") as file:
+        file.write("-------- Round : " + str(round_num) + '\n')
+        for k, v in dictionary.items():
+            file.write("Message: " + str(k) + '\n')
+            for row in v:
+                file.write("User and time: " + str(row) + "\n")
+        file.close()
 
 
 def read_peers_file(filename):
@@ -54,24 +34,15 @@ file_number = str(7)
 #file_number = "chad"
 file_name = "transcript_" + file_number + ".txt"
 
-csv_file_name = "transcript_" + file_number + ".csv"
+new_file_name = "private_eight_" + file_number + ".txt"
 #this deletes the stuff in the csv file
-open(csv_file_name, 'w').close()
-
-# open private peers file
-#private_peers = read_peers_file("privatepeers.txt")
-
-round_offer_dict = {}
-round_ack_dict = {}
+open(new_file_name, 'w').close()
 
 #just to initialize
 user_id = ""
 time_stamp = ""
 msg_id = ""
 msg_id_type = -1
-
-
-#TODO: This will assume that the first round will start with 1
 new_round = 1
 
 data_file_in = open(file_name, "r")
@@ -99,24 +70,17 @@ for row in data_file_in:
         # starting new round
         if round_number != new_round:
             print("-=======================NEW ROUND")
-            exit()      #FOR TESTING
-
+            write_to_file(round_number, priv_msg_dict, new_file_name)
             round_ct += 1
 
             started_new_round += 1
-            WriteToCSVFile("S", round_offer_dict, csv_file_name)
-            WriteToCSVFile("R", round_ack_dict, csv_file_name)
-            round_offer_dict = {}
-            round_ack_dict = {}
             new_round = round_number
 
             # NEW additions
             prev_time = 0
             prev_epoch = 0.0
             first = 0
-
             priv_msg_dict = {}  # collect new private messages each round..
-
 
     # this is the OFFER or ACK in that round
     else:
@@ -132,7 +96,6 @@ for row in data_file_in:
         # if it is the first of the round, keep track of to determine private nodes.
         if first == 0:
             round_start_time = curr_msg_time
-
 
         msg_id = row_split[2]
         if msg_id == "OFFER":
@@ -151,16 +114,16 @@ for row in data_file_in:
                     msg = row_split[2]
 
                     temp = [user_id, curr_msg_time]
+
                     # if not in the dictionary, only add to list of 8 if...???
                     if msg not in priv_msg_dict:
                         time_dif = abs(curr_msg_time - round_start_time)
-                        print("time diff ", time_dif)
+
                         if time_dif < 5:
                             priv_msg_dict[msg] = []
                             priv_msg_dict[msg].append(temp)
                     else: # only put user in priv_msg_dict if fit in the right time
                         if msg in priv_msg_dict:
-                            print("Inside the Dict[msg]",priv_msg_dict[msg])
                             for k,v in priv_msg_dict.items():
                                 dict_user_time = v[0][1]            #This should be the lowest time
                                 time_dif = abs(curr_msg_time - dict_user_time)
@@ -173,12 +136,11 @@ for row in data_file_in:
                     first += 1
             msg_id_type = -1
 
+    '''
     for k,v in priv_msg_dict.items():
         print("message: ", k)
         #print("node recvd message, time: ", v[0][1])    # this give the time of the 0th user
         print("node recev", v )
-
-    prev_epoch = curr_msg_time
-
-
+    '''
+    prev_epoch = curr_msg_time      # not using anymore
 data_file_in.close()
