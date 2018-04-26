@@ -37,6 +37,8 @@ for target in targets:
         continue
 
     these_peers = []
+    threshold = 0
+
     while True:
         s.send("PEERS\n".encode())
         received = s.recv(1024).decode()
@@ -49,9 +51,8 @@ for target in targets:
             continue
 
         no_new = True
-        threshold = 0
         for element in split_rec:
-            threshold += 1
+            print(threshold)
             found_peer = False
             for peer in these_peers:
                 if element == peer:
@@ -60,6 +61,9 @@ for target in targets:
             if not found_peer:
                 these_peers.append(element)
                 no_new = False
+                threshold = 0
+            print(no_new, threshold)
+        threshold += 1
         if no_new == True and threshold > 10:
             break
 
@@ -88,7 +92,6 @@ for target in targets:
         print(ele)
 
     s.close()
-    break
 
     if len(targets) == 240:
         break
